@@ -48,14 +48,10 @@
   (clojure.string/join
    (clojure.string/split (random/base64 60) #"/")))
 
-(defn make-auth
-  "Creates the auth-map for Friend"
-  [identity]
-  (with-meta identity
-    {:type ::friend/auth
-     ::friend/workflow :email-login
-     ::friend/redirect-on-auth? true}))
-  
+(defn default-credential-fn
+  [creds]
+  {:identity (:access-token creds)})
+
 (defn workflow
   "Workflow for OAuth2"
   [config]
@@ -96,10 +92,10 @@
                                   extract-access-token)
                               token-response)]
 
-            ;; The auth map for a successful authentication:
-            (make-auth (merge {:identity access-token
-                               :access_token access-token}
-                              (:config-auth config))))
+              (when-let [auth-map ((:credential-fn config default-credential-fn)
+                                   {:access-token access-token})]
+                (vary-meta auth-map merge {::friend/workflow :oauth2
+                                           :type ::friend/auth})))
 
           ;; Step 1: redirect to OAuth2 provider.  Code will be in response.
           (let [anti-forgery-token    (generate-anti-forgery-token)
