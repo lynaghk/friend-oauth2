@@ -95,6 +95,7 @@
               (when-let [auth-map ((:credential-fn config default-credential-fn)
                                    {:access-token access-token})]
                 (vary-meta auth-map merge {::friend/workflow :oauth2
+                                           ::friend/redirect-on-auth? true
                                            :type ::friend/auth})))
 
           ;; Step 1: redirect to OAuth2 provider.  Code will be in response.
